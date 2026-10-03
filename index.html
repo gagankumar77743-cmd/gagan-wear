@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>GAGAN WEAR</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- NAVIGATION -->
+    <header>
+
+        <div class="logo">
+            GAGAN WEAR
+        </div>
+
+        <nav>
+            <a href="#">Home</a>
+            <a href="#products">Shop</a>
+            <a href="#categories">Categories</a>
+            <a href="#contact">Contact</a>
+        </nav>
+
+        <button class="cart">
+            🛒 Cart (0)
+        </button>
+
+    </header>
+    <button class="account-btn" onclick="openAuth()">
+    👤 Account
+</button>
+
+    <!-- HERO -->
+    <section class="hero">
+
+        <div class="hero-text">
+
+            <p>NEW COLLECTION 2026</p>
+
+            <h1>
+                WEAR YOUR
+                <span>STYLE.</span>
+            </h1>
+
+            <p>
+                Discover modern fashion made
+                for everyday confidence.
+            </p>
+
+            <button class="shop-btn">
+                SHOP NOW
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- CATEGORIES -->
+    <section id="categories">
+
+        <h2>Shop Categories</h2>
+
+        <div class="categories">
+
+            <div class="category">
+                👕
+                <h3>T-Shirts</h3>
+            </div>
+
+            <div class="category">
+                👖
+                <h3>Jeans</h3>
+            </div>
+
+            <div class="category">
+                🧥
+                <h3>Jackets</h3>
+            </div>
+
+            <div class="category">
+                👟
+                <h3>Shoes</h3>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- PRODUCTS -->
+    <section id="products">
+
+        <h2>Featured Products</h2>
+
+        <div class="products">
+
+            <div class="product">
+
+                <div class="product-image">
+                    👕
+                </div>
+
+                <h3>Oversized T-Shirt</h3>
+
+                <p>₹799</p>
+
+                <button>Add to Cart</button>
+
+            </div>
+
+
+            <div class="product">
+
+                <div class="product-image">
+                    🧥
+                </div>
+
+                <h3>Classic Jacket</h3>
+
+                <p>₹1,999</p>
+
+                <button>Add to Cart</button>
+
+            </div>
+
+
+            <div class="product">
+
+                <div class="product-image">
+                    👖
+                </div>
+
+                <h3>Street Jeans</h3>
+
+                <p>₹1,499</p>
+
+                <button>Add to Cart</button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- FOOTER -->
+    <footer id="contact">
+
+        <h2>GAGAN WEAR</h2>
+
+        <p>Fashion that matches your vibe.</p>
+
+        <p>© 2026 Gagan Wear</p>
+
+    </footer>
+    
+     <!-- =========================
+     LOGIN / SIGNUP
+========================= -->
+
+<div class="auth-overlay" id="authOverlay">
+
+    <div class="auth-box">
+
+        <button class="close-auth" onclick="closeAuth()">
+            ×
+        </button>
+
+        <!-- LOGIN -->
+
+        <div id="loginForm">
+
+            <div class="auth-logo">
+                GW
+            </div>
+
+            <h2>Welcome Back 👋</h2>
+
+            <p class="auth-subtitle">
+                Login to your GAGAN WEAR account
+            </p>
+
+            <input
+                type="email"
+                id="loginEmail"
+                placeholder="Email address"
+            >
+
+            <div class="password-box">
+
+                <input
+                    type="password"
+                    id="loginPassword"
+                    placeholder="Password"
+                >
+
+                <button
+                    type="button"
+                    onclick="togglePassword('loginPassword', this)"
+                >
+                    👁
+                </button>
+
+            </div>
+
+            <button class="auth-main-btn" onclick="loginUser()">
+                LOGIN
+            </button>
+
+            <p class="switch-text">
+                Don't have an account?
+                <span onclick="showSignup()">Sign Up</span>
+            </p>
+
+        </div>
+
+
+        <!-- SIGNUP -->
+
+        <div id="signupForm" class="hidden">
+
+            <div class="auth-logo">
+                GW
+            </div>
+
+            <h2>Create Account ✨</h2>
+
+            <p class="auth-subtitle">
+                Join the GAGAN WEAR family
+            </p>
+
+            <input
+                type="text"
+                id="signupName"
+                placeholder="Full name"
+            >
+
+            <input
+                type="email"
+                id="signupEmail"
+                placeholder="Email address"
+            >
+
+            <div class="password-box">
+
+                <input
+                    type="password"
+                    id="signupPassword"
+                    placeholder="Create password"
+                >
+
+                <button
+                    type="button"
+                    onclick="togglePassword('signupPassword', this)"
+                >
+                    👁
+                </button>
+
+            </div>
+
+            <button class="auth-main-btn" onclick="signupUser()">
+                CREATE ACCOUNT
+            </button>
+
+            <p class="switch-text">
+                Already have an account?
+                <span onclick="showLogin()">Login</span>
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+    <!-- JAVASCRIPT -->
+    <script src="script.js"></script>
+
+</body>
+
+</html>
+
