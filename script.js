@@ -1,3 +1,14 @@
+/* =========================================================
+   GAGAN WEAR - FULL SCRIPT
+   Cart + Wishlist + Search + Categories + Checkout
+   + Google Sheets Order Management
+   ========================================================= */
+
+
+/* =========================================================
+   PRODUCTS
+   ========================================================= */
+
 const products = [
 
     {
@@ -67,7 +78,12 @@ const products = [
 ];
 
 
-let cart = JSON.parse(localStorage.getItem("gaganCart")) || [];
+/* =========================================================
+   LOCAL STORAGE
+   ========================================================= */
+
+let cart =
+    JSON.parse(localStorage.getItem("gaganCart")) || [];
 
 let wishlist =
     JSON.parse(localStorage.getItem("gaganWishlist")) || [];
@@ -75,39 +91,79 @@ let wishlist =
 let currentCategory = "All";
 
 
-const productGrid = document.getElementById("productGrid");
-const cartCount = document.getElementById("cartCount");
-const wishlistCount = document.getElementById("wishlistCount");
-const cartDrawer = document.getElementById("cartDrawer");
-const cartOverlay = document.getElementById("cartOverlay");
-const cartItems = document.getElementById("cartItems");
-const cartTotal = document.getElementById("cartTotal");
-const toast = document.getElementById("toast");
+/* =========================================================
+   GOOGLE SHEETS ORDER API
+   ========================================================= */
+
+const ORDER_API_URL =
+    "https://script.google.com/macros/s/AKfycbw0HwzDzU8OhHfEPgP6bMaG3HSvTcHDwAsUeA6SofEcAk5KsQJqW6DUfA1-sfoTKh8n/exec";
 
 
-/* FORMAT PRICE */
+/* =========================================================
+   DOM ELEMENTS
+   ========================================================= */
+
+const productGrid =
+    document.getElementById("productGrid");
+
+const cartCount =
+    document.getElementById("cartCount");
+
+const wishlistCount =
+    document.getElementById("wishlistCount");
+
+const cartDrawer =
+    document.getElementById("cartDrawer");
+
+const cartOverlay =
+    document.getElementById("cartOverlay");
+
+const cartItems =
+    document.getElementById("cartItems");
+
+const cartTotal =
+    document.getElementById("cartTotal");
+
+const toast =
+    document.getElementById("toast");
+
+
+/* =========================================================
+   FORMAT PRICE
+   ========================================================= */
 
 function money(value) {
-    return "₹" + value.toLocaleString("en-IN");
+
+    return "₹" +
+        Number(value).toLocaleString("en-IN");
+
 }
 
 
-/* TOAST */
+/* =========================================================
+   TOAST MESSAGE
+   ========================================================= */
 
 function showToast(message) {
+
+    if (!toast) return;
 
     toast.textContent = message;
 
     toast.classList.add("show");
 
     setTimeout(() => {
+
         toast.classList.remove("show");
+
     }, 2200);
 
 }
 
 
-/* SAVE */
+/* =========================================================
+   SAVE CART + WISHLIST
+   ========================================================= */
 
 function saveData() {
 
@@ -124,55 +180,87 @@ function saveData() {
 }
 
 
-/* PRODUCT DISPLAY */
+/* =========================================================
+   DISPLAY PRODUCTS
+   ========================================================= */
 
 function displayProducts() {
 
-    let search =
-        document.getElementById("searchInput")
-        .value
-        .toLowerCase()
-        .trim();
-
-    let sort =
-        document.getElementById("sortSelect").value;
+    if (!productGrid) return;
 
 
-    let filtered = products.filter(product => {
+    const searchInput =
+        document.getElementById("searchInput");
 
-        const matchesSearch =
-            product.name.toLowerCase().includes(search) ||
-            product.category.toLowerCase().includes(search);
+    const sortSelect =
+        document.getElementById("sortSelect");
 
-        const matchesCategory =
-            currentCategory === "All" ||
-            product.category === currentCategory;
 
-        return matchesSearch && matchesCategory;
+    const search =
+        searchInput
+            ? searchInput.value.toLowerCase().trim()
+            : "";
 
-    });
 
+    const sort =
+        sortSelect
+            ? sortSelect.value
+            : "default";
+
+
+    let filtered =
+        products.filter(product => {
+
+            const matchesSearch =
+                product.name
+                    .toLowerCase()
+                    .includes(search) ||
+
+                product.category
+                    .toLowerCase()
+                    .includes(search);
+
+
+            const matchesCategory =
+                currentCategory === "All" ||
+
+                product.category ===
+                currentCategory;
+
+
+            return (
+                matchesSearch &&
+                matchesCategory
+            );
+
+        });
+
+
+    /* SORT */
 
     if (sort === "low") {
 
-        filtered.sort((a, b) =>
-            a.price - b.price
+        filtered.sort(
+            (a, b) => a.price - b.price
         );
 
     }
+
 
     if (sort === "high") {
 
-        filtered.sort((a, b) =>
-            b.price - a.price
+        filtered.sort(
+            (a, b) => b.price - a.price
         );
 
     }
 
+
     if (sort === "name") {
 
-        filtered.sort((a, b) =>
-            a.name.localeCompare(b.name)
+        filtered.sort(
+            (a, b) =>
+                a.name.localeCompare(b.name)
         );
 
     }
@@ -181,18 +269,27 @@ function displayProducts() {
     productGrid.innerHTML = "";
 
 
+    /* NO RESULTS */
+
     if (filtered.length === 0) {
 
         productGrid.innerHTML = `
+
             <div style="
                 grid-column:1/-1;
                 text-align:center;
                 padding:70px 20px;
                 color:var(--muted);
             ">
+
                 <h2>No products found 😕</h2>
-                <p>Try another search.</p>
+
+                <p>
+                    Try another search.
+                </p>
+
             </div>
+
         `;
 
         return;
@@ -200,10 +297,13 @@ function displayProducts() {
     }
 
 
+    /* PRODUCT CARDS */
+
     filtered.forEach(product => {
 
         const isWishlisted =
             wishlist.includes(product.id);
+
 
         productGrid.innerHTML += `
 
@@ -221,28 +321,48 @@ function displayProducts() {
                         class="wishlist ${isWishlisted ? "active" : ""}"
                         onclick="toggleWishlist(${product.id})"
                     >
-                        ${isWishlisted ? "❤️" : "♡"}
+
+                        ${
+                            isWishlisted
+                                ? "❤️"
+                                : "♡"
+                        }
+
                     </button>
 
                 </div>
 
+
                 <div class="product-info">
 
                     <span class="product-category">
+
                         ${product.category}
+
                     </span>
 
-                    <h3>${product.name}</h3>
+
+                    <h3>
+
+                        ${product.name}
+
+                    </h3>
+
 
                     <div class="product-price">
+
                         ${money(product.price)}
+
                     </div>
+
 
                     <button
                         class="add-btn"
                         onclick="addToCart(${product.id})"
                     >
+
                         ADD TO CART
+
                     </button>
 
                 </div>
@@ -254,21 +374,33 @@ function displayProducts() {
     });
 
 
-    document.getElementById("activeFilter").textContent =
-        currentCategory === "All"
-            ? `Showing ${filtered.length} products`
-            : `${currentCategory} • ${filtered.length} products`;
+    const activeFilter =
+        document.getElementById("activeFilter");
+
+
+    if (activeFilter) {
+
+        activeFilter.textContent =
+
+            currentCategory === "All"
+
+                ? `Showing ${filtered.length} products`
+
+                : `${currentCategory} • ${filtered.length} products`;
+
+    }
 
 }
 
 
-/* ADD CART */
+/* =========================================================
+   ADD TO CART
+   ========================================================= */
 
 function addToCart(id) {
 
-    const existing = cart.find(
-        item => item.id === id
-    );
+    const existing =
+        cart.find(item => item.id === id);
 
 
     if (existing) {
@@ -278,14 +410,18 @@ function addToCart(id) {
     } else {
 
         cart.push({
+
             id: id,
+
             quantity: 1
+
         });
 
     }
 
 
     saveData();
+
     updateCart();
 
     showToast("Added to cart 🛒");
@@ -293,13 +429,15 @@ function addToCart(id) {
 }
 
 
-/* CHANGE QUANTITY */
+/* =========================================================
+   CHANGE QUANTITY
+   ========================================================= */
 
 function changeQuantity(id, amount) {
 
-    const item = cart.find(
-        item => item.id === id
-    );
+    const item =
+        cart.find(item => item.id === id);
+
 
     if (!item) return;
 
@@ -309,28 +447,35 @@ function changeQuantity(id, amount) {
 
     if (item.quantity <= 0) {
 
-        cart = cart.filter(
-            item => item.id !== id
-        );
+        cart =
+            cart.filter(
+                item => item.id !== id
+            );
 
     }
 
 
     saveData();
+
     updateCart();
 
 }
 
 
-/* REMOVE */
+/* =========================================================
+   REMOVE FROM CART
+   ========================================================= */
 
 function removeFromCart(id) {
 
-    cart = cart.filter(
-        item => item.id !== id
-    );
+    cart =
+        cart.filter(
+            item => item.id !== id
+        );
+
 
     saveData();
+
     updateCart();
 
     showToast("Removed from cart");
@@ -338,30 +483,51 @@ function removeFromCart(id) {
 }
 
 
-/* UPDATE CART */
+/* =========================================================
+   UPDATE CART
+   ========================================================= */
 
 function updateCart() {
 
+    if (!cartCount ||
+        !cartTotal ||
+        !cartItems) {
+
+        return;
+
+    }
+
+
     let totalItems = 0;
+
     let totalPrice = 0;
 
 
     cart.forEach(item => {
 
         const product =
-            products.find(p => p.id === item.id);
+            products.find(
+                p => p.id === item.id
+            );
+
 
         if (!product) return;
 
-        totalItems += item.quantity;
+
+        totalItems +=
+            item.quantity;
+
 
         totalPrice +=
-            product.price * item.quantity;
+            product.price *
+            item.quantity;
 
     });
 
 
-    cartCount.textContent = totalItems;
+    cartCount.textContent =
+        totalItems;
+
 
     cartTotal.textContent =
         money(totalPrice);
@@ -370,14 +536,30 @@ function updateCart() {
     cartItems.innerHTML = "";
 
 
+    /* EMPTY CART */
+
     if (cart.length === 0) {
 
         cartItems.innerHTML = `
+
             <div class="empty-cart">
-                <div style="font-size:50px">🛒</div>
-                <h3>Your cart is empty</h3>
-                <p>Add something you like!</p>
+
+                <div style="font-size:50px">
+
+                    🛒
+
+                </div>
+
+                <h3>
+                    Your cart is empty
+                </h3>
+
+                <p>
+                    Add something you like!
+                </p>
+
             </div>
+
         `;
 
         return;
@@ -385,10 +567,15 @@ function updateCart() {
     }
 
 
+    /* CART ITEMS */
+
     cart.forEach(item => {
 
         const product =
-            products.find(p => p.id === item.id);
+            products.find(
+                p => p.id === item.id
+            );
+
 
         if (!product) return;
 
@@ -402,37 +589,63 @@ function updateCart() {
                     alt="${product.name}"
                 >
 
+
                 <div>
 
-                    <h4>${product.name}</h4>
+                    <h4>
+                        ${product.name}
+                    </h4>
+
 
                     <div class="cart-item-price">
+
                         ${money(product.price)}
+
                     </div>
+
 
                     <div class="quantity">
 
                         <button
-                            onclick="changeQuantity(${product.id}, -1)"
+                            onclick="changeQuantity(
+                                ${product.id},
+                                -1
+                            )"
                         >
+
                             −
+
                         </button>
+
 
                         <strong>
+
                             ${item.quantity}
+
                         </strong>
 
+
                         <button
-                            onclick="changeQuantity(${product.id}, 1)"
+                            onclick="changeQuantity(
+                                ${product.id},
+                                1
+                            )"
                         >
+
                             +
+
                         </button>
+
 
                         <button
                             class="remove-item"
-                            onclick="removeFromCart(${product.id})"
+                            onclick="removeFromCart(
+                                ${product.id}
+                            )"
                         >
+
                             Remove
+
                         </button>
 
                     </div>
@@ -448,48 +661,107 @@ function updateCart() {
 }
 
 
-/* CART OPEN/CLOSE */
+/* =========================================================
+   CART OPEN
+   ========================================================= */
 
 function openCart() {
 
+    if (!cartDrawer ||
+        !cartOverlay) return;
+
+
     cartDrawer.classList.add("active");
+
     cartOverlay.classList.add("active");
 
 }
 
+
+/* =========================================================
+   CART CLOSE
+   ========================================================= */
+
 function closeCart() {
 
+    if (!cartDrawer ||
+        !cartOverlay) return;
+
+
     cartDrawer.classList.remove("active");
+
     cartOverlay.classList.remove("active");
 
 }
 
 
-document.getElementById("cartBtn")
-    .addEventListener("click", openCart);
+/* =========================================================
+   CART BUTTONS
+   ========================================================= */
 
-document.getElementById("closeCart")
-    .addEventListener("click", closeCart);
+const cartBtn =
+    document.getElementById("cartBtn");
 
-cartOverlay.addEventListener("click", closeCart);
+const closeCartBtn =
+    document.getElementById("closeCart");
 
 
-/* WISHLIST */
+if (cartBtn) {
+
+    cartBtn.addEventListener(
+        "click",
+        openCart
+    );
+
+}
+
+
+if (closeCartBtn) {
+
+    closeCartBtn.addEventListener(
+        "click",
+        closeCart
+    );
+
+}
+
+
+if (cartOverlay) {
+
+    cartOverlay.addEventListener(
+        "click",
+        closeCart
+    );
+
+}
+
+
+/* =========================================================
+   WISHLIST
+   ========================================================= */
 
 function toggleWishlist(id) {
 
     if (wishlist.includes(id)) {
 
         wishlist =
-            wishlist.filter(item => item !== id);
+            wishlist.filter(
+                item => item !== id
+            );
 
-        showToast("Removed from wishlist");
+
+        showToast(
+            "Removed from wishlist"
+        );
 
     } else {
 
         wishlist.push(id);
 
-        showToast("Added to wishlist ❤️");
+
+        showToast(
+            "Added to wishlist ❤️"
+        );
 
     }
 
@@ -503,7 +775,14 @@ function toggleWishlist(id) {
 }
 
 
+/* =========================================================
+   UPDATE WISHLIST
+   ========================================================= */
+
 function updateWishlist() {
+
+    if (!wishlistCount) return;
+
 
     wishlistCount.textContent =
         wishlist.length;
@@ -511,378 +790,1148 @@ function updateWishlist() {
 }
 
 
-document.getElementById("wishlistBtn")
-    .addEventListener("click", () => {
+/* =========================================================
+   WISHLIST BUTTON
+   ========================================================= */
 
-        const wishlistProducts =
-            products.filter(p =>
-                wishlist.includes(p.id)
+const wishlistBtn =
+    document.getElementById(
+        "wishlistBtn"
+    );
+
+
+if (wishlistBtn) {
+
+    wishlistBtn.addEventListener(
+        "click",
+        () => {
+
+            const wishlistProducts =
+                products.filter(
+                    p =>
+                        wishlist.includes(p.id)
+                );
+
+
+            if (
+                wishlistProducts.length === 0
+            ) {
+
+                showToast(
+                    "Your wishlist is empty ❤️"
+                );
+
+                return;
+
+            }
+
+
+            const searchInput =
+                document.getElementById(
+                    "searchInput"
+                );
+
+
+            if (searchInput) {
+
+                searchInput.value = "";
+
+            }
+
+
+            currentCategory =
+                "All";
+
+
+            displayProducts();
+
+
+            if (productGrid) {
+
+                productGrid.scrollIntoView({
+
+                    behavior: "smooth"
+
+                });
+
+            }
+
+
+            showToast(
+                `${wishlistProducts.length} item(s) in your wishlist ❤️`
             );
 
-        if (wishlistProducts.length === 0) {
-
-            showToast("Your wishlist is empty ❤️");
-            return;
-
         }
+    );
 
-        document.getElementById("searchInput").value = "";
+}
 
-        currentCategory = "All";
 
-        productGrid.scrollIntoView({
-            behavior: "smooth"
-        });
+/* =========================================================
+   CATEGORY FILTER
+   ========================================================= */
 
-        showToast(
-            `${wishlistProducts.length} item(s) in your wishlist ❤️`
+document
+    .querySelectorAll(".category-card")
+    .forEach(card => {
+
+        card.addEventListener(
+            "click",
+            () => {
+
+                currentCategory =
+                    card.dataset.category;
+
+
+                displayProducts();
+
+
+                const productsSection =
+                    document.getElementById(
+                        "products"
+                    );
+
+
+                if (productsSection) {
+
+                    productsSection.scrollIntoView({
+
+                        behavior: "smooth"
+
+                    });
+
+                }
+
+            }
         );
 
     });
 
 
-/* CATEGORY FILTER */
+/* =========================================================
+   SEARCH
+   ========================================================= */
 
-document.querySelectorAll(".category-card")
-    .forEach(card => {
+const searchInput =
+    document.getElementById(
+        "searchInput"
+    );
 
-        card.addEventListener("click", () => {
+
+if (searchInput) {
+
+    searchInput.addEventListener(
+        "input",
+        displayProducts
+    );
+
+}
+
+
+/* =========================================================
+   SORT
+   ========================================================= */
+
+const sortSelect =
+    document.getElementById(
+        "sortSelect"
+    );
+
+
+if (sortSelect) {
+
+    sortSelect.addEventListener(
+        "change",
+        displayProducts
+    );
+
+}
+
+
+/* =========================================================
+   ALL PRODUCTS
+   ========================================================= */
+
+const allProductsBtn =
+    document.getElementById(
+        "allProductsBtn"
+    );
+
+
+if (allProductsBtn) {
+
+    allProductsBtn.addEventListener(
+        "click",
+        () => {
 
             currentCategory =
-                card.dataset.category;
+                "All";
+
+
+            if (searchInput) {
+
+                searchInput.value = "";
+
+            }
+
 
             displayProducts();
 
-            document.getElementById("products")
-                .scrollIntoView({
-                    behavior: "smooth"
-                });
+        }
+    );
 
-        });
-
-    });
+}
 
 
-/* SEARCH */
-
-document.getElementById("searchInput")
-    .addEventListener("input", displayProducts);
-
-
-/* SORT */
-
-document.getElementById("sortSelect")
-    .addEventListener("change", displayProducts);
-
-
-/* ALL PRODUCTS */
-
-document.getElementById("allProductsBtn")
-    .addEventListener("click", () => {
-
-        currentCategory = "All";
-
-        document.getElementById("searchInput").value = "";
-
-        displayProducts();
-
-    });
-
-
-/* THEME */
+/* =========================================================
+   DARK / LIGHT MODE
+   ========================================================= */
 
 const savedTheme =
-    localStorage.getItem("gaganTheme");
+    localStorage.getItem(
+        "gaganTheme"
+    );
+
 
 if (savedTheme === "dark") {
 
-    document.body.classList.add("dark");
+    document.body.classList.add(
+        "dark"
+    );
 
 }
 
 
 function updateThemeIcon() {
 
-    document.getElementById("themeBtn").textContent =
-        document.body.classList.contains("dark")
+    const themeBtn =
+        document.getElementById(
+            "themeBtn"
+        );
+
+
+    if (!themeBtn) return;
+
+
+    themeBtn.textContent =
+
+        document.body.classList.contains(
+            "dark"
+        )
+
             ? "☀️"
+
             : "🌙";
 
 }
 
 
-document.getElementById("themeBtn")
-    .addEventListener("click", () => {
+const themeBtn =
+    document.getElementById(
+        "themeBtn"
+    );
 
-        document.body.classList.toggle("dark");
 
-        localStorage.setItem(
-            "gaganTheme",
-            document.body.classList.contains("dark")
-                ? "dark"
-                : "light"
-        );
+if (themeBtn) {
 
-        updateThemeIcon();
+    themeBtn.addEventListener(
+        "click",
+        () => {
 
-    });
+            document.body.classList.toggle(
+                "dark"
+            );
+
+
+            localStorage.setItem(
+                "gaganTheme",
+
+                document.body.classList.contains(
+                    "dark"
+                )
+                    ? "dark"
+                    : "light"
+            );
+
+
+            updateThemeIcon();
+
+        }
+    );
+
+}
 
 
 updateThemeIcon();
 
 
-/* MOBILE MENU */
+/* =========================================================
+   MOBILE MENU
+   ========================================================= */
 
-document.getElementById("menuBtn")
-    .addEventListener("click", () => {
-
-        document.getElementById("navMenu")
-            .classList.toggle("active");
-
-    });
+const menuBtn =
+    document.getElementById(
+        "menuBtn"
+    );
 
 
-/* CHECKOUT */
+const navMenu =
+    document.getElementById(
+        "navMenu"
+    );
+
+
+if (menuBtn && navMenu) {
+
+    menuBtn.addEventListener(
+        "click",
+        () => {
+
+            navMenu.classList.toggle(
+                "active"
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   CHECKOUT
+   ========================================================= */
 
 const checkoutModal =
-    document.getElementById("checkoutModal");
+    document.getElementById(
+        "checkoutModal"
+    );
 
 
-document.getElementById("checkoutBtn")
-    .addEventListener("click", () => {
+const checkoutBtn =
+    document.getElementById(
+        "checkoutBtn"
+    );
 
-        if (cart.length === 0) {
 
-            showToast("Your cart is empty 🛒");
-            return;
+/* =========================================================
+   OPEN CHECKOUT
+   ========================================================= */
+
+if (checkoutBtn) {
+
+    checkoutBtn.addEventListener(
+        "click",
+        () => {
+
+            if (cart.length === 0) {
+
+                showToast(
+                    "Your cart is empty 🛒"
+                );
+
+                return;
+
+            }
+
+
+            let total = 0;
+
+
+            cart.forEach(item => {
+
+                const product =
+                    products.find(
+                        p => p.id === item.id
+                    );
+
+
+                if (product) {
+
+                    total +=
+                        product.price *
+                        item.quantity;
+
+                }
+
+            });
+
+
+            const checkoutTotal =
+                document.getElementById(
+                    "checkoutTotal"
+                );
+
+
+            if (checkoutTotal) {
+
+                checkoutTotal.textContent =
+                    money(total);
+
+            }
+
+
+            if (checkoutModal) {
+
+                checkoutModal.classList.add(
+                    "active"
+                );
+
+            }
 
         }
+    );
+
+}
 
 
-        let total = 0;
+/* =========================================================
+   CLOSE CHECKOUT
+   ========================================================= */
 
-        cart.forEach(item => {
-
-            const product =
-                products.find(p => p.id === item.id);
-
-            total +=
-                product.price * item.quantity;
-
-        });
+const closeCheckout =
+    document.getElementById(
+        "closeCheckout"
+    );
 
 
-        document.getElementById("checkoutTotal")
-            .textContent = money(total);
+if (closeCheckout) {
 
-        checkoutModal.classList.add("active");
+    closeCheckout.addEventListener(
+        "click",
+        () => {
 
-    });
+            if (checkoutModal) {
 
+                checkoutModal.classList.remove(
+                    "active"
+                );
 
-document.getElementById("closeCheckout")
-    .addEventListener("click", () => {
-
-        checkoutModal.classList.remove("active");
-
-    });
-
-
-document.getElementById("checkoutForm")
-    .addEventListener("submit", event => {
-
-        event.preventDefault();
-
-
-        const payment =
-            document.getElementById("paymentMethod").value;
-
-
-        if (payment === "online") {
-
-            showToast(
-                "Online payment is coming soon 💳"
-            );
-
-            return;
+            }
 
         }
+    );
+
+}
 
 
-        const orderNumber =
-            "GW" +
-            Math.floor(
-                100000 + Math.random() * 900000
-            );
+/* =========================================================
+   PLACE ORDER
+   ========================================================= */
+
+const checkoutForm =
+    document.getElementById(
+        "checkoutForm"
+    );
 
 
-        checkoutModal.classList.remove("active");
+if (checkoutForm) {
 
-        cart = [];
+    checkoutForm.addEventListener(
+        "submit",
+        async event => {
 
-        saveData();
-        updateCart();
-
-        closeCart();
-
-        event.target.reset();
+            event.preventDefault();
 
 
-        alert(
-            `🎉 Order placed successfully!\n\nOrder ID: ${orderNumber}\n\nThank you for shopping with GAGAN WEAR!`
-        );
+            /* CUSTOMER DETAILS */
 
-    });
+            const customerInput =
+                document.getElementById(
+                    "customerName"
+                );
 
 
-/* ACCOUNT */
+            const phoneInput =
+                document.getElementById(
+                    "customerPhone"
+                );
+
+
+            const addressInput =
+                document.getElementById(
+                    "customerAddress"
+                );
+
+
+            const paymentInput =
+                document.getElementById(
+                    "paymentMethod"
+                );
+
+
+            const customer =
+                customerInput
+                    ? customerInput.value.trim()
+                    : "";
+
+
+            const phone =
+                phoneInput
+                    ? phoneInput.value.trim()
+                    : "";
+
+
+            const address =
+                addressInput
+                    ? addressInput.value.trim()
+                    : "";
+
+
+            const payment =
+                paymentInput
+                    ? paymentInput.value
+                    : "cod";
+
+
+            /* VALIDATION */
+
+            if (
+                !customer ||
+                !phone ||
+                !address
+            ) {
+
+                showToast(
+                    "Please fill all delivery details"
+                );
+
+                return;
+
+            }
+
+
+            /* PHONE VALIDATION */
+
+            const phoneDigits =
+                phone.replace(
+                    /\D/g,
+                    ""
+                );
+
+
+            if (
+                phoneDigits.length < 10
+            ) {
+
+                showToast(
+                    "Please enter a valid phone number"
+                );
+
+                return;
+
+            }
+
+
+            /* ONLINE PAYMENT */
+
+            if (
+                payment === "online"
+            ) {
+
+                showToast(
+                    "Online payment is coming soon 💳"
+                );
+
+                return;
+
+            }
+
+
+            /* BUILD ORDER ITEMS */
+
+            let total = 0;
+
+
+            const orderItems =
+                cart
+                    .map(item => {
+
+                        const product =
+                            products.find(
+                                p =>
+                                    p.id === item.id
+                            );
+
+
+                        if (!product) {
+
+                            return null;
+
+                        }
+
+
+                        total +=
+                            product.price *
+                            item.quantity;
+
+
+                        return {
+
+                            id: product.id,
+
+                            name: product.name,
+
+                            price: product.price,
+
+                            quantity:
+                                item.quantity
+
+                        };
+
+                    })
+                    .filter(Boolean);
+
+
+            /* CHECK CART */
+
+            if (
+                orderItems.length === 0
+            ) {
+
+                showToast(
+                    "Your cart is empty 🛒"
+                );
+
+                return;
+
+            }
+
+
+            /* ORDER OBJECT */
+
+            const orderData = {
+
+                customer:
+                    customer,
+
+                phone:
+                    phone,
+
+                address:
+                    address,
+
+                items:
+                    orderItems,
+
+                total:
+                    total,
+
+                payment:
+                    "Cash on Delivery"
+
+            };
+
+
+            /* SUBMIT BUTTON */
+
+            const submitButton =
+                checkoutForm.querySelector(
+                    'button[type="submit"]'
+                );
+
+
+            if (submitButton) {
+
+                submitButton.disabled =
+                    true;
+
+                submitButton.textContent =
+                    "PLACING ORDER...";
+
+            }
+
+
+            try {
+
+                /*
+                 * Send order to Google Apps Script.
+                 *
+                 * no-cors is used because this public
+                 * Apps Script endpoint does not expose a
+                 * normal CORS response to the browser.
+                 */
+
+                await fetch(
+                    ORDER_API_URL,
+                    {
+
+                        method: "POST",
+
+                        mode: "no-cors",
+
+                        headers: {
+
+                            "Content-Type":
+                                "text/plain;charset=utf-8"
+
+                        },
+
+                        body:
+                            JSON.stringify(
+                                orderData
+                            )
+
+                    }
+                );
+
+
+                /*
+                 * The browser cannot read the response
+                 * when no-cors is used.
+                 *
+                 * The request has been sent to the
+                 * Apps Script endpoint.
+                 */
+
+
+                if (checkoutModal) {
+
+                    checkoutModal.classList.remove(
+                        "active"
+                    );
+
+                }
+
+
+                /* CLEAR CART */
+
+                cart = [];
+
+
+                saveData();
+
+                updateCart();
+
+                closeCart();
+
+
+                /* RESET FORM */
+
+                checkoutForm.reset();
+
+
+                /* SUCCESS MESSAGE */
+
+                alert(
+
+                    "🎉 ORDER PLACED SUCCESSFULLY!\n\n" +
+
+                    "Your order has been sent to GAGAN WEAR.\n\n" +
+
+                    "Thank you for shopping with us! 🛍️"
+
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    "Order submission error:",
+                    error
+                );
+
+
+                showToast(
+                    "Could not send order. Please try again."
+                );
+
+            }
+
+
+            /* ENABLE BUTTON */
+
+            if (submitButton) {
+
+                submitButton.disabled =
+                    false;
+
+                submitButton.textContent =
+                    "PLACE ORDER";
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   ACCOUNT / AUTH
+   ========================================================= */
 
 const authModal =
-    document.getElementById("authModal");
+    document.getElementById(
+        "authModal"
+    );
 
 
-document.getElementById("accountBtn")
-    .addEventListener("click", () => {
-
-        authModal.classList.add("active");
-
-    });
+const accountBtn =
+    document.getElementById(
+        "accountBtn"
+    );
 
 
-document.getElementById("closeAuth")
-    .addEventListener("click", () => {
-
-        authModal.classList.remove("active");
-
-    });
+const closeAuth =
+    document.getElementById(
+        "closeAuth"
+    );
 
 
-/* LOGIN / SIGNUP SWITCH */
+/* OPEN ACCOUNT */
 
-document.getElementById("showSignup")
-    .addEventListener("click", () => {
+if (accountBtn) {
 
-        document.getElementById("loginForm")
-            .classList.add("hidden");
+    accountBtn.addEventListener(
+        "click",
+        () => {
 
-        document.getElementById("signupForm")
-            .classList.remove("hidden");
+            if (authModal) {
 
-    });
+                authModal.classList.add(
+                    "active"
+                );
 
-
-document.getElementById("showLogin")
-    .addEventListener("click", () => {
-
-        document.getElementById("signupForm")
-            .classList.add("hidden");
-
-        document.getElementById("loginForm")
-            .classList.remove("hidden");
-
-    });
-
-
-/* DEMO SIGNUP */
-
-document.getElementById("signupBtn")
-    .addEventListener("click", () => {
-
-        const name =
-            document.getElementById("signupName").value.trim();
-
-        const email =
-            document.getElementById("signupEmail").value.trim();
-
-        const password =
-            document.getElementById("signupPassword").value;
-
-
-        if (!name || !email || !password) {
-
-            showToast("Please fill all fields");
-
-            return;
+            }
 
         }
+    );
+
+}
 
 
-        localStorage.setItem(
-            "gaganUser",
-            JSON.stringify({
-                name,
-                email,
-                password
-            })
-        );
+/* CLOSE ACCOUNT */
 
+if (closeAuth) {
 
-        showToast("Account created 🎉");
+    closeAuth.addEventListener(
+        "click",
+        () => {
 
+            if (authModal) {
 
-        document.getElementById("signupForm")
-            .classList.add("hidden");
+                authModal.classList.remove(
+                    "active"
+                );
 
-        document.getElementById("loginForm")
-            .classList.remove("hidden");
-
-    });
-
-
-/* DEMO LOGIN */
-
-document.getElementById("loginBtn")
-    .addEventListener("click", () => {
-
-        const email =
-            document.getElementById("loginEmail").value.trim();
-
-        const password =
-            document.getElementById("loginPassword").value;
-
-
-        const user =
-            JSON.parse(
-                localStorage.getItem("gaganUser")
-            );
-
-
-        if (!user) {
-
-            showToast(
-                "Create an account first"
-            );
-
-            return;
+            }
 
         }
+    );
+
+}
 
 
-        if (
-            email === user.email &&
-            password === user.password
-        ) {
+/* =========================================================
+   LOGIN / SIGNUP SWITCH
+   ========================================================= */
 
-            authModal.classList.remove("active");
+const showSignup =
+    document.getElementById(
+        "showSignup"
+    );
 
-            showToast(
-                `Welcome back, ${user.name}! 👋`
-            );
 
-        } else {
+const showLogin =
+    document.getElementById(
+        "showLogin"
+    );
 
-            showToast(
-                "Incorrect email or password"
-            );
+
+if (showSignup) {
+
+    showSignup.addEventListener(
+        "click",
+        () => {
+
+            const loginForm =
+                document.getElementById(
+                    "loginForm"
+                );
+
+
+            const signupForm =
+                document.getElementById(
+                    "signupForm"
+                );
+
+
+            if (loginForm) {
+
+                loginForm.classList.add(
+                    "hidden"
+                );
+
+            }
+
+
+            if (signupForm) {
+
+                signupForm.classList.remove(
+                    "hidden"
+                );
+
+            }
 
         }
+    );
 
-    });
+}
 
 
-/* INITIAL LOAD */
+if (showLogin) {
+
+    showLogin.addEventListener(
+        "click",
+        () => {
+
+            const loginForm =
+                document.getElementById(
+                    "loginForm"
+                );
+
+
+            const signupForm =
+                document.getElementById(
+                    "signupForm"
+                );
+
+
+            if (signupForm) {
+
+                signupForm.classList.add(
+                    "hidden"
+                );
+
+            }
+
+
+            if (loginForm) {
+
+                loginForm.classList.remove(
+                    "hidden"
+                );
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   DEMO SIGNUP
+   ========================================================= */
+
+const signupBtn =
+    document.getElementById(
+        "signupBtn"
+    );
+
+
+if (signupBtn) {
+
+    signupBtn.addEventListener(
+        "click",
+        () => {
+
+            const name =
+                document
+                    .getElementById(
+                        "signupName"
+                    )
+                    ?.value
+                    .trim();
+
+
+            const email =
+                document
+                    .getElementById(
+                        "signupEmail"
+                    )
+                    ?.value
+                    .trim();
+
+
+            const password =
+                document
+                    .getElementById(
+                        "signupPassword"
+                    )
+                    ?.value;
+
+
+            if (
+                !name ||
+                !email ||
+                !password
+            ) {
+
+                showToast(
+                    "Please fill all fields"
+                );
+
+                return;
+
+            }
+
+
+            localStorage.setItem(
+
+                "gaganUser",
+
+                JSON.stringify({
+
+                    name:
+                        name,
+
+                    email:
+                        email,
+
+                    password:
+                        password
+
+                })
+
+            );
+
+
+            showToast(
+                "Account created 🎉"
+            );
+
+
+            const signupForm =
+                document.getElementById(
+                    "signupForm"
+                );
+
+
+            const loginForm =
+                document.getElementById(
+                    "loginForm"
+                );
+
+
+            if (signupForm) {
+
+                signupForm.classList.add(
+                    "hidden"
+                );
+
+            }
+
+
+            if (loginForm) {
+
+                loginForm.classList.remove(
+                    "hidden"
+                );
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   DEMO LOGIN
+   ========================================================= */
+
+const loginBtn =
+    document.getElementById(
+        "loginBtn"
+    );
+
+
+if (loginBtn) {
+
+    loginBtn.addEventListener(
+        "click",
+        () => {
+
+            const email =
+                document
+                    .getElementById(
+                        "loginEmail"
+                    )
+                    ?.value
+                    .trim();
+
+
+            const password =
+                document
+                    .getElementById(
+                        "loginPassword"
+                    )
+                    ?.value;
+
+
+            const user =
+                JSON.parse(
+
+                    localStorage.getItem(
+                        "gaganUser"
+                    )
+
+                );
+
+
+            if (!user) {
+
+                showToast(
+                    "Create an account first"
+                );
+
+                return;
+
+            }
+
+
+            if (
+
+                email === user.email &&
+
+                password === user.password
+
+            ) {
+
+                if (authModal) {
+
+                    authModal.classList.remove(
+                        "active"
+                    );
+
+                }
+
+
+                showToast(
+                    `Welcome back, ${user.name}! 👋`
+                );
+
+            } else {
+
+                showToast(
+                    "Incorrect email or password"
+                );
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   INITIAL LOAD
+   ========================================================= */
 
 displayProducts();
-updateCart();
-updateWishlist();
 
+updateCart();
+
+updateWishlist();
