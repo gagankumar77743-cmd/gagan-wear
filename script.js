@@ -885,3 +885,4 @@ document.getElementById("loginBtn")
 displayProducts();
 updateCart();
 updateWishlist();
+
